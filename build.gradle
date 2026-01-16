@@ -28,14 +28,14 @@ dependencies {
 	// para las apirest y servicios web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// para la capa de datos y JPA (Hibernate) para el crud
+	// para la capa de datos y JPA (Hibernate) para el crud la persistencia
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	// validador de datos aqui va los @NotNull, @Size, etc
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	//base de datos en memoria H2
-	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	// ayuda a optimizar metodos
 	compileOnly 'org.projectlombok:lombok'

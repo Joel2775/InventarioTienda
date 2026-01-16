@@ -18,9 +18,11 @@ public class Producto {
 
         @NotBlank
         @Size(min = 2, max = 50)
+        @Column(nullable = false, length = 50)
         private String nombre;
 
         @NotBlank
+        @Column(nullable = false, columnDefinition = "TEXT")
         private String descripcion;
 
         @NotNull

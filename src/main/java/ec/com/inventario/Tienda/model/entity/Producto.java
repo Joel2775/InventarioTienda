@@ -1,4 +1,4 @@
-package ec.com.inventario.Tienda.model;
+package ec.com.inventario.Tienda.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -6,7 +6,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "productos")
-@Data
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor

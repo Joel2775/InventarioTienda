@@ -1,6 +1,6 @@
 package ec.com.inventario.Tienda.service;
 
-import ec.com.inventario.Tienda.model.Producto;
+import ec.com.inventario.Tienda.model.entity.Producto;
 
 import java.util.List;
 

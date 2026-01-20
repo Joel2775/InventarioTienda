@@ -1,6 +1,6 @@
 package ec.com.inventario.Tienda.service;
 
-import ec.com.inventario.Tienda.model.entity.Producto;
+import ec.com.inventario.Tienda.model.dto.ProductoDTO;
 import ec.com.inventario.Tienda.repository.IProductoRepository;
 import org.springframework.stereotype.Service;
 
@@ -9,34 +9,66 @@ import java.util.List;
 @Service
 public class ProductoService implements IProductoService {
 
-    private final IProductoRepository repository;
+    private final IProductoRepository productoRepository;
 
-    public ProductoService(IProductoRepository repository) {
-        this.repository = repository;
+    public ProductoService(IProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
     }
 
     @Override
-    public List<Producto> listarTodos() {
-        return List.of();
+    public List<ProductoDTO> listarTodos() {
+        List<ProductoDTO> listaProductoDTO = productoRepository.findAll();
+        return listaProductoDTO;
     }
 
     @Override
-    public Producto obtenerPorId(Long id) {
-        return null;
+    public ProductoDTO obtenerPorId(Long id) {
+        return productoRepository.findById(id).orElse(null);
     }
 
     @Override
-    public Producto crear(Producto producto) {
-        return null;
+    public void crear(ProductoDTO producto) {
+        productoRepository.save(producto);
+
     }
 
     @Override
-    public Producto actualizar(Long id, Producto producto) {
-        return null;
+    public ProductoDTO actualizar(Long id, ProductoDTO nuevoProducto) {
+        ProductoDTO productoExistente = productoRepository.findById(id).orElse(null);
+
+        if(productoExistente == null){
+            return null;
+        }
+
+        // 2. Actualizar los campos que vienen con valor
+        if(nuevoProducto.getNumeroSerie() != null){
+            productoExistente.setNumeroSerie(nuevoProducto.getNumeroSerie());
+        }
+
+        if(nuevoProducto.getNombre() != null){
+            productoExistente.setNombre(nuevoProducto.getNombre());
+        }
+
+        if(nuevoProducto.getDescripcion() != null){
+            productoExistente.setDescripcion(nuevoProducto.getDescripcion());
+        }
+
+        if(nuevoProducto.getPrecio() != null){
+            productoExistente.setPrecio(nuevoProducto.getPrecio());
+        }
+
+        if(nuevoProducto.getStock() != null){
+            productoExistente.setStock(nuevoProducto.getStock());
+        }
+
+        // 3. Guardar y retornar
+        return productoRepository.save(productoExistente);
+
+
     }
 
     @Override
     public void eliminar(Long id) {
-
+        productoRepository.deleteById(id);
     }
 }

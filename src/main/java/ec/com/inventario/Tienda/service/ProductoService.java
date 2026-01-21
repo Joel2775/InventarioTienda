@@ -1,10 +1,13 @@
 package ec.com.inventario.Tienda.service;
 
 import ec.com.inventario.Tienda.model.dto.ProductoDTO;
+import ec.com.inventario.Tienda.model.entity.Categorias;
+import ec.com.inventario.Tienda.model.entity.Producto;
 import ec.com.inventario.Tienda.repository.IProductoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductoService implements IProductoService {
@@ -17,24 +20,66 @@ public class ProductoService implements IProductoService {
 
     @Override
     public List<ProductoDTO> listarTodos() {
-        List<ProductoDTO> listaProductoDTO = productoRepository.findAll();
-        return listaProductoDTO;
+        return productoRepository.findAll()
+                .stream()
+                .map(producto -> {
+                    ProductoDTO dto = new ProductoDTO();
+                    dto.setNumeroSerie(producto.getNumeroSerie());
+                    dto.setNombre(producto.getNombre());
+                    dto.setDescripcion(producto.getDescripcion());
+                    dto.setPrecio(producto.getPrecio());
+                    dto.setStock(producto.getStock());
+
+                    if (producto.getCategoria() != null) {
+                        dto.setCategoriaId(producto.getCategoria().getCategoriaId());
+                        dto.setCategoriaNombre(producto.getCategoria().getCategoriaNombre());
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public ProductoDTO obtenerPorId(Long id) {
-        return productoRepository.findById(id).orElse(null);
+        Producto producto = productoRepository.findById(id).orElse(null);
+
+        if (producto == null) {
+            return null;
+        }
+
+        ProductoDTO dto = new ProductoDTO();
+        dto.setNumeroSerie(producto.getNumeroSerie());
+        dto.setNombre(producto.getNombre());
+        dto.setDescripcion(producto.getDescripcion());
+        dto.setPrecio(producto.getPrecio());
+        dto.setStock(producto.getStock());
+
+        if (producto.getCategoria() != null) {
+            dto.setCategoriaId(producto.getCategoria().getCategoriaId());
+            dto.setCategoriaNombre(producto.getCategoria().getCategoriaNombre());
+        }
+
+        return dto;
     }
 
     @Override
-    public void crear(ProductoDTO producto) {
-        productoRepository.save(producto);
+    public void crear(ProductoDTO productoDTO) {
+        Producto producto = new Producto();
 
+        producto.setNumeroSerie(productoDTO.getNumeroSerie());
+        producto.setNombre(productoDTO.getNombre());
+        producto.setDescripcion(productoDTO.getDescripcion());
+        producto.setPrecio(productoDTO.getPrecio());
+        producto.setStock(productoDTO.getStock());
+        //producto.setCategoria(productoDTO.getCategoriaId());
+
+        productoRepository.save(producto);
     }
 
     @Override
     public ProductoDTO actualizar(Long id, ProductoDTO nuevoProducto) {
-        ProductoDTO productoExistente = productoRepository.findById(id).orElse(null);
+        Producto productoExistente = productoRepository.findById(id).orElse(null);
 
         if(productoExistente == null){
             return null;
@@ -62,7 +107,13 @@ public class ProductoService implements IProductoService {
         }
 
         // 3. Guardar y retornar
-        return productoRepository.save(productoExistente);
+        Producto actualizado = productoRepository.save(productoExistente);
+        actualizado.setNumeroSerie(nuevoProducto.getNumeroSerie());
+        actualizado.setNombre(nuevoProducto.getNombre());
+        actualizado.setDescripcion(nuevoProducto.getDescripcion());
+        actualizado.setPrecio(nuevoProducto.getPrecio());
+        actualizado.setStock(nuevoProducto.getStock());
+        return nuevoProducto;
 
 
     }

@@ -13,7 +13,12 @@ public class Producto {
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
+        private Long productoId;
+
+        @NotBlank
+        @Size(min = 2, max = 50)
+        @Column(nullable = false, length = 50, unique = true)
+        private String numeroSerie;
 
         @NotBlank
         @Size(min = 2, max = 50)
@@ -32,7 +37,8 @@ public class Producto {
         @Min(0)
         private Integer stock;
 
-        @NotBlank
-        private String categoria;
+        @ManyToOne
+        @JoinColumn(name = "categoria_id", nullable = false)
+        private Categorias categoria;
     }
 

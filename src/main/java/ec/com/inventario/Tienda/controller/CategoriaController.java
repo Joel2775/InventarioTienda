@@ -16,5 +16,14 @@ public class CategoriaController {
     public CategoriaController(ICategoriaService categoriaService) {
         this.categoriaService = categoriaService;
     }
-    
+
+    @GetMapping("/categorias")
+    public ResponseEntity<List<ProductoDTO>> getAll(){
+        return ResponseEntity.ok(categoriaService.listarTodas());
+    }
+
+    @GetMapping("/categorias/{id}")
+    public ResponseEntity<ProductoDTO> getById(@PathVariable Long id){
+        return ResponseEntity.ok(categoriaService.obtenerPorId(id));
+    }
 }

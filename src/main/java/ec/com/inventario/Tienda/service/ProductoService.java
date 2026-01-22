@@ -3,6 +3,7 @@ package ec.com.inventario.Tienda.service;
 import ec.com.inventario.Tienda.model.dto.ProductoDTO;
 import ec.com.inventario.Tienda.model.entity.Categorias;
 import ec.com.inventario.Tienda.model.entity.Producto;
+import ec.com.inventario.Tienda.repository.ICategoriasRepository;
 import ec.com.inventario.Tienda.repository.IProductoRepository;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +14,10 @@ import java.util.stream.Collectors;
 public class ProductoService implements IProductoService {
 
     private final IProductoRepository productoRepository;
+    private final ICategoriasRepository categoriasRepository;
 
-    public ProductoService(IProductoRepository productoRepository) {
+    public ProductoService(IProductoRepository productoRepository, ICategoriasRepository categoriasRepository) {
+        this.categoriasRepository = categoriasRepository;
         this.productoRepository = productoRepository;
     }
 
@@ -22,64 +25,30 @@ public class ProductoService implements IProductoService {
     public List<ProductoDTO> listarTodos() {
         return productoRepository.findAll()
                 .stream()
-                .map(producto -> {
-                    ProductoDTO dto = new ProductoDTO();
-                    dto.setNumeroSerie(producto.getNumeroSerie());
-                    dto.setNombre(producto.getNombre());
-                    dto.setDescripcion(producto.getDescripcion());
-                    dto.setPrecio(producto.getPrecio());
-                    dto.setStock(producto.getStock());
-
-                    if (producto.getCategoria() != null) {
-                        dto.setCategoriaId(producto.getCategoria().getCategoriaId());
-                        dto.setCategoriaNombre(producto.getCategoria().getCategoriaNombre());
-                    }
-
-                    return dto;
-                })
-                .collect(Collectors.toList());
+                .map(producto -> {return pasarAProductoDTO(producto);}).collect(Collectors.toList());
     }
 
     @Override
     public ProductoDTO obtenerPorId(Long id) {
-        Producto producto = productoRepository.findById(id).orElse(null);
+        Producto producto = productoRepository.findById(id).orElse(null); // aqui deberia manejar el caso de producto no encontrado con throw o similar
 
-        if (producto == null) {
-            return null;
-        }
-
-        ProductoDTO dto = new ProductoDTO();
-        dto.setNumeroSerie(producto.getNumeroSerie());
-        dto.setNombre(producto.getNombre());
-        dto.setDescripcion(producto.getDescripcion());
-        dto.setPrecio(producto.getPrecio());
-        dto.setStock(producto.getStock());
-
-        if (producto.getCategoria() != null) {
-            dto.setCategoriaId(producto.getCategoria().getCategoriaId());
-            dto.setCategoriaNombre(producto.getCategoria().getCategoriaNombre());
-        }
-
-        return dto;
+        return pasarAProductoDTO(producto);
     }
 
     @Override
     public void crear(ProductoDTO productoDTO) {
-        Producto producto = new Producto();
+        Categorias categorias = categoriasRepository
+                .findById(productoDTO.getCategoriaId())
+                .orElse(null); // aqui deberia manejar el caso de categoria no encontrada con throw o similar
 
-        producto.setNumeroSerie(productoDTO.getNumeroSerie());
-        producto.setNombre(productoDTO.getNombre());
-        producto.setDescripcion(productoDTO.getDescripcion());
-        producto.setPrecio(productoDTO.getPrecio());
-        producto.setStock(productoDTO.getStock());
-        //producto.setCategoria(productoDTO.getCategoriaId());
+        Producto producto = pasarAProductoEntidad(productoDTO, categorias);
 
         productoRepository.save(producto);
     }
 
     @Override
     public ProductoDTO actualizar(Long id, ProductoDTO nuevoProducto) {
-        Producto productoExistente = productoRepository.findById(id).orElse(null);
+        Producto productoExistente = productoRepository.findById(id).orElse(null); // aqui deberia manejar el caso de producto no encontrado con throw o similar
 
         if(productoExistente == null){
             return null;
@@ -106,20 +75,58 @@ public class ProductoService implements IProductoService {
             productoExistente.setStock(nuevoProducto.getStock());
         }
 
+        if (nuevoProducto.getCategoriaId() != null) {
+            Categorias categoria = categoriasRepository.findById(nuevoProducto.getCategoriaId())
+                .orElse(null); // aqui deberia manejar el caso de categoria no encontrada con throw o similar
+            productoExistente.setCategoria(categoria);
+        }
+
         // 3. Guardar y retornar
         Producto actualizado = productoRepository.save(productoExistente);
-        actualizado.setNumeroSerie(nuevoProducto.getNumeroSerie());
-        actualizado.setNombre(nuevoProducto.getNombre());
-        actualizado.setDescripcion(nuevoProducto.getDescripcion());
-        actualizado.setPrecio(nuevoProducto.getPrecio());
-        actualizado.setStock(nuevoProducto.getStock());
-        return nuevoProducto;
-
+        return  pasarAProductoDTO(actualizado);
 
     }
 
     @Override
     public void eliminar(Long id) {
         productoRepository.deleteById(id);
+    }
+
+
+    public ProductoDTO pasarAProductoDTO(Producto producto) {
+        if (producto == null) {
+            return null;
+        }
+
+        ProductoDTO dto = new ProductoDTO();
+        dto.setProductoId(producto.getProductoId());
+        dto.setNumeroSerie(producto.getNumeroSerie());
+        dto.setNombre(producto.getNombre());
+        dto.setDescripcion(producto.getDescripcion());
+        dto.setPrecio(producto.getPrecio());
+        dto.setStock(producto.getStock());
+
+        if (producto.getCategoria() != null) {
+            dto.setCategoriaId(producto.getCategoria().getCategoriaId());
+            dto.setCategoriaNombre(producto.getCategoria().getCategoriaNombre());
+        }
+
+        return dto;
+    }
+
+    public Producto pasarAProductoEntidad(ProductoDTO dto, Categorias categoria) {
+        if (dto == null) {
+            return null;
+        }
+
+        Producto producto = new Producto();
+        producto.setNumeroSerie(dto.getNumeroSerie());
+        producto.setNombre(dto.getNombre());
+        producto.setDescripcion(dto.getDescripcion());
+        producto.setPrecio(dto.getPrecio());
+        producto.setStock(dto.getStock());
+        producto.setCategoria(categoria);
+
+        return producto;
     }
 }

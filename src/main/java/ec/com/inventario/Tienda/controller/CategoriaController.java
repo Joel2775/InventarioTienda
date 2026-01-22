@@ -26,4 +26,16 @@ public class CategoriaController {
     public ResponseEntity<ProductoDTO> getById(@PathVariable Long id){
         return ResponseEntity.ok(categoriaService.obtenerPorId(id));
     }
+
+    @PostMapping("/categorias")
+    public ResponseEntity<Void> save(@RequestBody ProductoDTO categoria){
+        categoriaService.crear(categoria);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    // Actualizar solo un campo
+    @PatchMapping("/categorias/{id}")
+    public ResponseEntity<ProductoDTO> update(@PathVariable Long id, @RequestBody ProductoDTO categoria){
+        return ResponseEntity.ok(categoriaService.actualizar(id, categoria));
+    }
+    
 }

@@ -37,5 +37,10 @@ public class CategoriaController {
     public ResponseEntity<ProductoDTO> update(@PathVariable Long id, @RequestBody ProductoDTO categoria){
         return ResponseEntity.ok(categoriaService.actualizar(id, categoria));
     }
-    
+
+    @DeleteMapping("/categorias/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        categoriaService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

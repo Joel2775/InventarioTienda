@@ -6,17 +6,17 @@ import java.util.List;
 public interface ICategoriaService {
 
     // OBTENER TODAS LAS CATEGORÍAS
-    List<ProductoDTO> listarTodas();
+    public List<ProductoDTO> getCategoria();
 
     // OBTENER UNA CATEGORÍA POR ID
-    ProductoDTO obtenerPorId(Long id);
+    public ProductoDTO findCategoria(Long id);
 
     // CREAR UNA NUEVA CATEGORÍA
-    void crear(ProductoDTO categoriaDTO);
+    public void crearCategoria(ProductoDTO categoriaDTO);
 
     // ACTUALIZAR UNA CATEGORÍA EXISTENTE
-    ProductoDTO actualizar(Long id, ProductoDTO categoriaDTO);
+    public ProductoDTO actualizarCategoria(Long id, ProductoDTO datosNuevos);
 
     // ELIMINAR UNA CATEGORÍA POR ID
-    void eliminar(Long id);
+    public void eliminarCategoria(Long id);
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
 public class CategoriaService implements ICategoriaService {
 
@@ -19,28 +20,29 @@ public class CategoriaService implements ICategoriaService {
     }
 
     @Override
-    public List<ProductoDTO> listarTodas() {
-        return categoriasRepository.findAll()
-                .stream()
-                .map(this::pasarACategoriaDTO)
+    public List<ProductoDTO> getCategoria() {
+        List<Categorias>listaCategorias = categoriasRepository.findAll();
+        return listaCategorias.stream()
+                .map(categorias -> pasarACategoriaDTO(categorias))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ProductoDTO obtenerPorId(Long id) {
-        Categorias categoria = categoriasRepository.findById(id).orElse(null);
-
-        return pasarACategoriaDTO(categoria);
+    public ProductoDTO findCategoria(Long id) {
+        Categorias categorias = categoriasRepository.findById(id).orElse(null);
+        return pasarACategoriaDTO(categorias);
     }
 
-    @Override
-    public void crear(ProductoDTO categoriaDTO) {
-        Categorias categoria = pasarACategoriaEntidad(categoriaDTO);
-        categoriasRepository.save(categoria);
-    }
 
     @Override
-    public ProductoDTO actualizar(Long id, ProductoDTO nuevaCategoria) {
+    public void crearCategoria(ProductoDTO categoriaDTO) {
+        Categorias categorias = categoriasRepository.findById(categoriaDTO.getProductoId()).orElse((null));
+        categoriasRepository.save(categorias);
+    }
+
+
+    @Override
+    public ProductoDTO actualizarCategoria(Long id, ProductoDTO datosNuevos) {
         Categorias categoriaExistente = categoriasRepository.findById(id).orElse(null);
 
         if(categoriaExistente == null){
@@ -48,19 +50,20 @@ public class CategoriaService implements ICategoriaService {
         }
 
         // 2. Actualizar los campos que vienen con valor
-        if(nuevaCategoria.getCategoriaNombre() != null){
-            categoriaExistente.setCategoriaNombre(nuevaCategoria.getCategoriaNombre());
+        if(datosNuevos.getCategoriaNombre() != null){
+            categoriaExistente.setCategoriaNombre(datosNuevos.getCategoriaNombre());
         }
 
         // 3. Guardar y retornar
-        Categorias actualizada = categoriasRepository.save(categoriaExistente);
-        return pasarACategoriaDTO(actualizada);
+        Categorias actualizado = categoriasRepository.save(categoriaExistente);
+        return  pasarACategoriaDTO(actualizado);
     }
 
     @Override
-    public void eliminar(Long id) {
+    public void eliminarCategoria(Long id) {
         categoriasRepository.deleteById(id);
     }
+
 
     public ProductoDTO pasarACategoriaDTO(Categorias categoria) {
         if (categoria == null) {

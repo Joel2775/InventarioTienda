@@ -28,9 +28,9 @@ public class ProductoController {
     }
 
     @PostMapping("/productos")
-    public ResponseEntity<Void> save(@RequestBody ProductoDTO producto){
+    public ResponseEntity<String> save(@RequestBody ProductoDTO producto){
         productoService.crear(producto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return new ResponseEntity<>("Producto creado exitosamente", HttpStatus.CREATED);
     }
     // Actualizar solo un campo
     @PatchMapping("/productos/{id}")
@@ -39,7 +39,7 @@ public class ProductoController {
     }
 
     @DeleteMapping("/productos/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<String> delete(@PathVariable Long id) {
         productoService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

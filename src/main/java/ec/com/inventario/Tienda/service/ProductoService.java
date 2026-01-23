@@ -7,6 +7,7 @@ import ec.com.inventario.Tienda.repository.ICategoriasRepository;
 import ec.com.inventario.Tienda.repository.IProductoRepository;
 import org.springframework.stereotype.Service;
 
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,10 +24,18 @@ public class ProductoService implements IProductoService {
 
     @Override
     public List<ProductoDTO> listarTodos() {
-        return productoRepository.findAll()
-                .stream()
-                .map(producto -> {return pasarAProductoDTO(producto);}).collect(Collectors.toList());
+
+        List<Producto> productos = productoRepository.findAll();
+
+//        if (productos.isEmpty()) {
+//            throw new ListaVaciaException("No existen productos registrados");
+//        }
+
+        return productos.stream()
+                .map(producto -> pasarAProductoDTO(producto))
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public ProductoDTO obtenerPorId(Long id) {

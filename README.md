@@ -24,16 +24,16 @@
 
 ## PASO A PASO PARA EJECUTAR EL PROYECTO
 ### 1) CONFIGURAR BASE DE DATOS MYSQL
-    - Iniciar MySQL Workbench
-    - Crear una nueva pestaña SQL para ejecutar el siguiente código:
+- Iniciar MySQL Workbench
+- Crear una nueva pestaña SQL para ejecutar el siguiente código:
 ```sql
 create database inventario_db;
 use inventario_db;
 ```
 
 ### 2) Preparar el proyecto en Intellij Idea.
-    - Abrir IntelliJ IDEA Community Edition
-    - Dirigete a la clase `TiendaApplication` para ejecutar el proyecto.
+- Abrir IntelliJ IDEA Community Edition
+- Dirigete a la clase `TiendaApplication` para ejecutar el proyecto.
 
 ### 3) Verificar que la aplicación esté corriendo correstamente
 Se debe de mostrar el siguiente mensaje en la terminal:

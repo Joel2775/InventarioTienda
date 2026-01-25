@@ -1,23 +1,24 @@
 package ec.com.inventario.Tienda.service;
 
-import ec.com.inventario.Tienda.model.dto.ProductoDTO;
-import ec.com.inventario.Tienda.model.entity.Producto;
+import ec.com.inventario.Tienda.model.dto.ProductoCreateDTO;
+import ec.com.inventario.Tienda.model.dto.ProductoResponseDTO;
+import ec.com.inventario.Tienda.model.dto.ProductoUpdateDTO;
 
 import java.util.List;
 
 public interface IProductoService {
 
     // OBTENER TODOS LOS PRODUCTOS
-    List<ProductoDTO> listarTodos();
+    List<ProductoResponseDTO> listarTodos();
 
     // OBTENER UN PRODUCTO POR ID
-    ProductoDTO obtenerPorId(Long id);
+    ProductoResponseDTO obtenerPorId(Long id);
 
     // CREAR UN NUEVO PRODUCTO
-    void crear(ProductoDTO productoDTO);
+    ProductoResponseDTO crear(ProductoCreateDTO productoCreateDTO);
 
     // ACTUALIZAR UN PRODUCTO EXISTENTE
-    ProductoDTO actualizar(Long id, ProductoDTO productoDTO);
+    ProductoResponseDTO actualizar(Long id, ProductoUpdateDTO productoUpdateDTO);
 
     // ELIMINAR UN PRODUCTO POR ID
     void eliminar(Long id);

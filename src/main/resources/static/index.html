@@ -657,465 +657,538 @@
 
 <script>
     const API_URL = 'http://localhost:8080/inventario';
-    let productoIdEliminar = null;
+let productoIdEliminar = null;
 
-    // Cambiar secciones
-    function showSection(sectionId) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+// ==========================================
+// UTILIDAD: Extraer mensaje de error del backend
+// ==========================================
+async function obtenerMensajeError(response) {
+    try {
+        const text = await response.text();
 
-        document.getElementById(sectionId).classList.add('active');
-        event.target.closest('.menu-item').classList.add('active');
+        if (!text) {
+            return "Error en el servidor";
+        }
 
-        // Cargar datos según la sección
-        if (sectionId === 'productos-listar') cargarProductos();
-        if (sectionId === 'productos-crear') cargarCategoriasSelect('crear-categoria');
-        if (sectionId === 'productos-actualizar') cargarCategoriasSelect('actualizar-categoria');
-        if (sectionId === 'categorias-listar') cargarCategorias();
+        const errorData = JSON.parse(text);
+
+        if (errorData.mensaje) {
+            return errorData.mensaje;
+        }
+        if (errorData.errores) {
+            return Object.values(errorData.errores).join(', ');
+        }
+        return errorData.error || errorData.message || "Error en el servidor";
+    } catch (e) {
+        return "Error en el servidor";
+    }
+}
+
+// ==========================================
+// UTILIDAD: Mostrar alertas
+// ==========================================
+function mostrarAlerta(seccion, mensaje, tipo) {
+    const alertDiv = document.getElementById(`alert-${seccion}`);
+    alertDiv.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+    setTimeout(() => alertDiv.innerHTML = '', 5000);
+}
+
+// ==========================================
+// CAMBIAR SECCIONES
+// ==========================================
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+
+    document.getElementById(sectionId).classList.add('active');
+    event.target.closest('.menu-item').classList.add('active');
+
+    // Cargar datos según la sección
+    if (sectionId === 'productos-listar') cargarProductos();
+    if (sectionId === 'productos-crear') cargarCategoriasSelect('crear-categoria');
+    if (sectionId === 'productos-actualizar') cargarCategoriasSelect('actualizar-categoria');
+    if (sectionId === 'categorias-listar') cargarCategorias();
+}
+
+// ==========================================
+// PRODUCTOS - LISTAR
+// ==========================================
+async function cargarProductos() {
+    try {
+        document.getElementById('loading-productos').style.display = 'block';
+        document.getElementById('tabla-productos').style.display = 'none';
+
+        const response = await fetch(`${API_URL}/productos`);
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
+        }
+
+        const productos = await response.json();
+
+        const tbody = document.getElementById('productos-body');
+        tbody.innerHTML = '';
+
+        productos.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p.productoId}</td>
+                    <td>${p.numeroSerie}</td>
+                    <td>${p.nombre}</td>
+                    <td>${p.descripcion.substring(0, 50)}...</td>
+                    <td>$${p.precio.toFixed(2)}</td>
+                    <td>${p.stock}</td>
+                    <td>${p.categoriaNombre || 'N/A'}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('loading-productos').style.display = 'none';
+        document.getElementById('tabla-productos').style.display = 'table';
+    } catch (error) {
+        document.getElementById('loading-productos').style.display = 'none';
+        mostrarAlerta('productos-listar', error.message, 'error');
+    }
+}
+
+// ==========================================
+// PRODUCTOS - BUSCAR POR ID
+// ==========================================
+async function buscarProductoPorId() {
+    const id = document.getElementById('buscar-producto-id').value;
+    if (!id) {
+        mostrarAlerta('productos-buscar', 'Por favor ingrese un ID', 'error');
+        return;
     }
 
-    // ==========================================
-    // PRODUCTOS - LISTAR
-    // ==========================================
-    async function cargarProductos() {
-        try {
-            document.getElementById('loading-productos').style.display = 'block';
-            document.getElementById('tabla-productos').style.display = 'none';
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`);
 
-            const response = await fetch(`${API_URL}/productos`);
-            const productos = await response.json();
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
+        }
 
-            const tbody = document.getElementById('productos-body');
-            tbody.innerHTML = '';
+        const producto = await response.json();
+        const resultado = document.getElementById('resultado-producto');
 
-            productos.forEach(p => {
-                tbody.innerHTML += `
-            <tr>
-                <td>${p.productoId}</td>
-                <td>${p.numeroSerie}</td>
-                <td>${p.nombre}</td>
-                <td>${p.descripcion.substring(0, 50)}...</td>
-                <td>$${p.precio.toFixed(2)}</td>
-                <td>${p.stock}</td>
-                <td>${p.categoriaNombre || 'N/A'}</td>
-            </tr>
+        resultado.innerHTML = `
+            <h4 style="margin-bottom: 15px; color: #667eea;">Producto Encontrado</h4>
+            <div class="result-item">
+                <div class="result-label">ID:</div>
+                <div class="result-value">${producto.productoId}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Número de Serie:</div>
+                <div class="result-value">${producto.numeroSerie}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Nombre:</div>
+                <div class="result-value">${producto.nombre}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Descripción:</div>
+                <div class="result-value">${producto.descripcion}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Precio:</div>
+                <div class="result-value">$${producto.precio.toFixed(2)}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Stock:</div>
+                <div class="result-value">${producto.stock}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Categoría:</div>
+                <div class="result-value">${producto.categoriaNombre || 'N/A'}</div>
+            </div>
         `;
-            });
-
-            document.getElementById('loading-productos').style.display = 'none';
-            document.getElementById('tabla-productos').style.display = 'table';
-        } catch (error) {
-            mostrarAlerta('productos-listar', 'Error al cargar productos: ' + error.message, 'error');
-        }
+        resultado.style.display = 'block';
+        mostrarAlerta('productos-buscar', 'Producto encontrado exitosamente', 'success');
+    } catch (error) {
+        document.getElementById('resultado-producto').style.display = 'none';
+        mostrarAlerta('productos-buscar', error.message, 'error');
     }
+}
 
-    // ==========================================
-    // PRODUCTOS - BUSCAR POR ID
-    // ==========================================
-    async function buscarProductoPorId() {
-        const id = document.getElementById('buscar-producto-id').value;
-        if (!id) {
-            mostrarAlerta('productos-buscar', 'Por favor ingrese un ID', 'error');
+// ==========================================
+// PRODUCTOS - CREAR
+// ==========================================
+async function cargarCategoriasSelect(selectId) {
+    try {
+        const response = await fetch(`${API_URL}/categorias`);
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            console.error('Error al cargar categorías:', mensajeError);
             return;
         }
 
-        try {
-            const response = await fetch(`${API_URL}/productos/${id}`);
-            if (!response.ok) throw new Error('Producto no encontrado');
+        const categorias = await response.json();
 
-            const producto = await response.json();
-            const resultado = document.getElementById('resultado-producto');
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Seleccione una categoría</option>';
 
-            resultado.innerHTML = `
-        <h4 style="margin-bottom: 15px; color: #667eea;">Producto Encontrado</h4>
-        <div class="result-item">
-            <div class="result-label">ID:</div>
-            <div class="result-value">${producto.productoId}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Número de Serie:</div>
-            <div class="result-value">${producto.numeroSerie}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Nombre:</div>
-            <div class="result-value">${producto.nombre}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Descripción:</div>
-            <div class="result-value">${producto.descripcion}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Precio:</div>
-            <div class="result-value">$${producto.precio.toFixed(2)}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Stock:</div>
-            <div class="result-value">${producto.stock}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Categoría:</div>
-            <div class="result-value">${producto.categoriaNombre || 'N/A'}</div>
-        </div>
-    `;
-            resultado.style.display = 'block';
-            mostrarAlerta('productos-buscar', 'Producto encontrado exitosamente', 'success');
-        } catch (error) {
-            document.getElementById('resultado-producto').style.display = 'none';
-            mostrarAlerta('productos-buscar', 'Error: ' + error.message, 'error');
+        categorias.forEach(c => {
+            select.innerHTML += `<option value="${c.categoriaId}">${c.categoriaNombre}</option>`;
+        });
+    } catch (error) {
+        console.error('Error al cargar categorías:', error.message);
+    }
+}
+
+document.getElementById('form-producto-crear').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const producto = {
+        numeroSerie: document.getElementById('crear-numero-serie').value,
+        nombre: document.getElementById('crear-nombre').value,
+        descripcion: document.getElementById('crear-descripcion').value,
+        precio: parseFloat(document.getElementById('crear-precio').value),
+        stock: parseInt(document.getElementById('crear-stock').value),
+        categoriaId: parseInt(document.getElementById('crear-categoria').value)
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/productos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(producto)
+        });
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
+
+        mostrarAlerta('productos-crear', 'Producto creado exitosamente', 'success');
+        document.getElementById('form-producto-crear').reset();
+    } catch (error) {
+        mostrarAlerta('productos-crear', error.message, 'error');
+    }
+});
+
+// ==========================================
+// PRODUCTOS - ACTUALIZAR
+// ==========================================
+async function cargarProductoParaActualizar() {
+    const id = document.getElementById('actualizar-producto-id').value;
+    if (!id) {
+        mostrarAlerta('productos-actualizar', 'Por favor ingrese un ID', 'error');
+        return;
     }
 
-    // ==========================================
-    // PRODUCTOS - CREAR
-    // ==========================================
-    async function cargarCategoriasSelect(selectId) {
-        try {
-            const response = await fetch(`${API_URL}/categorias`);
-            const categorias = await response.json();
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`);
 
-            const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">Seleccione una categoría</option>';
-
-            categorias.forEach(c => {
-                select.innerHTML += `<option value="${c.categoriaId}">${c.categoriaNombre}</option>`;
-            });
-        } catch (error) {
-            console.error('Error al cargar categorías:', error);
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
+
+        const producto = await response.json();
+
+        document.getElementById('actualizar-numero-serie').value = producto.numeroSerie;
+        document.getElementById('actualizar-nombre').value = producto.nombre;
+        document.getElementById('actualizar-descripcion').value = producto.descripcion;
+        document.getElementById('actualizar-precio').value = producto.precio;
+        document.getElementById('actualizar-stock').value = producto.stock;
+        document.getElementById('actualizar-categoria').value = producto.categoriaId;
+
+        document.getElementById('form-producto-actualizar').style.display = 'block';
+        mostrarAlerta('productos-actualizar', 'Producto cargado. Modifique los campos que desee actualizar', 'success');
+    } catch (error) {
+        mostrarAlerta('productos-actualizar', error.message, 'error');
+    }
+}
+
+document.getElementById('form-producto-actualizar').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('actualizar-producto-id').value;
+    const producto = {
+        numeroSerie: document.getElementById('actualizar-numero-serie').value,
+        nombre: document.getElementById('actualizar-nombre').value,
+        descripcion: document.getElementById('actualizar-descripcion').value,
+        precio: parseFloat(document.getElementById('actualizar-precio').value),
+        stock: parseInt(document.getElementById('actualizar-stock').value),
+        categoriaId: parseInt(document.getElementById('actualizar-categoria').value)
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(producto)
+        });
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
+        }
+
+        mostrarAlerta('productos-actualizar', 'Producto actualizado exitosamente', 'success');
+        cancelarActualizarProducto();
+    } catch (error) {
+        mostrarAlerta('productos-actualizar', error.message, 'error');
+    }
+});
+
+function cancelarActualizarProducto() {
+    document.getElementById('form-producto-actualizar').style.display = 'none';
+    document.getElementById('form-producto-actualizar').reset();
+    document.getElementById('actualizar-producto-id').value = '';
+}
+
+// ==========================================
+// PRODUCTOS - ELIMINAR
+// ==========================================
+async function cargarProductoParaEliminar() {
+    const id = document.getElementById('eliminar-producto-id').value;
+    if (!id) {
+        mostrarAlerta('productos-eliminar', 'Por favor ingrese un ID', 'error');
+        return;
     }
 
-    document.getElementById('form-producto-crear').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/productos/${id}`);
 
-        const producto = {
-            numeroSerie: document.getElementById('crear-numero-serie').value,
-            nombre: document.getElementById('crear-nombre').value,
-            descripcion: document.getElementById('crear-descripcion').value,
-            precio: parseFloat(document.getElementById('crear-precio').value),
-            stock: parseInt(document.getElementById('crear-stock').value),
-            categoriaId: parseInt(document.getElementById('crear-categoria').value)
-        };
-
-        try {
-            const response = await fetch(`${API_URL}/productos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(producto)
-            });
-
-            if (response.ok) {
-                mostrarAlerta('productos-crear', 'Producto creado exitosamente', 'success');
-                document.getElementById('form-producto-crear').reset();
-            } else {
-                mostrarAlerta('productos-crear', 'Error al crear el producto', 'error');
-            }
-        } catch (error) {
-            mostrarAlerta('productos-crear', 'Error: ' + error.message, 'error');
-        }
-    });
-
-    // ==========================================
-    // PRODUCTOS - ACTUALIZAR
-    // ==========================================
-    async function cargarProductoParaActualizar() {
-        const id = document.getElementById('actualizar-producto-id').value;
-        if (!id) {
-            mostrarAlerta('productos-actualizar', 'Por favor ingrese un ID', 'error');
-            return;
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
 
-        try {
-            const response = await fetch(`${API_URL}/productos/${id}`);
-            if (!response.ok) throw new Error('Producto no encontrado');
+        const producto = await response.json();
+        productoIdEliminar = id;
 
-            const producto = await response.json();
-
-            document.getElementById('actualizar-numero-serie').value = producto.numeroSerie;
-            document.getElementById('actualizar-nombre').value = producto.nombre;
-            document.getElementById('actualizar-descripcion').value = producto.descripcion;
-            document.getElementById('actualizar-precio').value = producto.precio;
-            document.getElementById('actualizar-stock').value = producto.stock;
-            document.getElementById('actualizar-categoria').value = producto.categoriaId;
-
-            document.getElementById('form-producto-actualizar').style.display = 'block';
-            mostrarAlerta('productos-actualizar', 'Producto cargado. Modifique los campos que desee actualizar', 'success');
-        } catch (error) {
-            mostrarAlerta('productos-actualizar', 'Error: ' + error.message, 'error');
-        }
-    }
-
-    document.getElementById('form-producto-actualizar').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const id = document.getElementById('actualizar-producto-id').value;
-        const producto = {
-            numeroSerie: document.getElementById('actualizar-numero-serie').value,
-            nombre: document.getElementById('actualizar-nombre').value,
-            descripcion: document.getElementById('actualizar-descripcion').value,
-            precio: parseFloat(document.getElementById('actualizar-precio').value),
-            stock: parseInt(document.getElementById('actualizar-stock').value),
-            categoriaId: parseInt(document.getElementById('actualizar-categoria').value)
-        };
-
-        try {
-            const response = await fetch(`${API_URL}/productos/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(producto)
-            });
-
-            if (response.ok) {
-                mostrarAlerta('productos-actualizar', 'Producto actualizado exitosamente', 'success');
-                cancelarActualizarProducto();
-            } else {
-                mostrarAlerta('productos-actualizar', 'Error al actualizar el producto', 'error');
-            }
-        } catch (error) {
-            mostrarAlerta('productos-actualizar', 'Error: ' + error.message, 'error');
-        }
-    });
-
-    function cancelarActualizarProducto() {
-        document.getElementById('form-producto-actualizar').style.display = 'none';
-        document.getElementById('form-producto-actualizar').reset();
-        document.getElementById('actualizar-producto-id').value = '';
-    }
-
-    // ==========================================
-    // PRODUCTOS - ELIMINAR
-    // ==========================================
-    async function cargarProductoParaEliminar() {
-        const id = document.getElementById('eliminar-producto-id').value;
-        if (!id) {
-            mostrarAlerta('productos-eliminar', 'Por favor ingrese un ID', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_URL}/productos/${id}`);
-            if (!response.ok) throw new Error('Producto no encontrado');
-
-            const producto = await response.json();
-            productoIdEliminar = id;
-
-            const datos = document.getElementById('producto-eliminar-datos');
-            datos.innerHTML = `
-        <div class="result-item">
-            <div class="result-label">ID:</div>
-            <div class="result-value">${producto.productoId}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Número de Serie:</div>
-            <div class="result-value">${producto.numeroSerie}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Nombre:</div>
-            <div class="result-value">${producto.nombre}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Precio:</div>
-            <div class="result-value">$${producto.precio.toFixed(2)}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Stock:</div>
-            <div class="result-value">${producto.stock}</div>
-        </div>
-    `;
-
-            document.getElementById('producto-eliminar-preview').style.display = 'block';
-        } catch (error) {
-            mostrarAlerta('productos-eliminar', 'Error: ' + error.message, 'error');
-        }
-    }
-
-    async function confirmarEliminarProducto() {
-        if (!productoIdEliminar) return;
-
-        try {
-            const response = await fetch(`${API_URL}/productos/${productoIdEliminar}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok || response.status === 204) {
-                mostrarAlerta('productos-eliminar', 'Producto eliminado exitosamente', 'success');
-                cancelarEliminarProducto();
-            } else {
-                mostrarAlerta('productos-eliminar', 'Error al eliminar el producto', 'error');
-            }
-        } catch (error) {
-            mostrarAlerta('productos-eliminar', 'Error: ' + error.message, 'error');
-        }
-    }
-
-    function cancelarEliminarProducto() {
-        document.getElementById('producto-eliminar-preview').style.display = 'none';
-        document.getElementById('eliminar-producto-id').value = '';
-        productoIdEliminar = null;
-    }
-
-    // ==========================================
-    // CATEGORIAS - LISTAR
-    // ==========================================
-    async function cargarCategorias() {
-        try {
-            document.getElementById('loading-categorias').style.display = 'block';
-            document.getElementById('tabla-categorias').style.display = 'none';
-
-            const response = await fetch(`${API_URL}/categorias`);
-            const categorias = await response.json();
-
-            const tbody = document.getElementById('categorias-body');
-            tbody.innerHTML = '';
-
-            categorias.forEach(c => {
-                tbody.innerHTML += `
-            <tr>
-                <td>${c.categoriaId}</td>
-                <td>${c.categoriaNombre}</td>
-            </tr>
+        const datos = document.getElementById('producto-eliminar-datos');
+        datos.innerHTML = `
+            <div class="result-item">
+                <div class="result-label">ID:</div>
+                <div class="result-value">${producto.productoId}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Número de Serie:</div>
+                <div class="result-value">${producto.numeroSerie}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Nombre:</div>
+                <div class="result-value">${producto.nombre}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Precio:</div>
+                <div class="result-value">$${producto.precio.toFixed(2)}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Stock:</div>
+                <div class="result-value">${producto.stock}</div>
+            </div>
         `;
-            });
 
-            document.getElementById('loading-categorias').style.display = 'none';
-            document.getElementById('tabla-categorias').style.display = 'table';
-        } catch (error) {
-            mostrarAlerta('categorias-listar', 'Error al cargar categorías: ' + error.message, 'error');
+        document.getElementById('producto-eliminar-preview').style.display = 'block';
+    } catch (error) {
+        mostrarAlerta('productos-eliminar', error.message, 'error');
+    }
+}
+
+async function confirmarEliminarProducto() {
+    if (!productoIdEliminar) return;
+
+    try {
+        const response = await fetch(`${API_URL}/productos/${productoIdEliminar}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok && response.status !== 204) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
+
+        mostrarAlerta('productos-eliminar', 'Producto eliminado exitosamente', 'success');
+        cancelarEliminarProducto();
+    } catch (error) {
+        mostrarAlerta('productos-eliminar', error.message, 'error');
+    }
+}
+
+function cancelarEliminarProducto() {
+    document.getElementById('producto-eliminar-preview').style.display = 'none';
+    document.getElementById('eliminar-producto-id').value = '';
+    productoIdEliminar = null;
+}
+
+// ==========================================
+// CATEGORIAS - LISTAR
+// ==========================================
+async function cargarCategorias() {
+    try {
+        document.getElementById('loading-categorias').style.display = 'block';
+        document.getElementById('tabla-categorias').style.display = 'none';
+
+        const response = await fetch(`${API_URL}/categorias`);
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
+        }
+
+        const categorias = await response.json();
+
+        const tbody = document.getElementById('categorias-body');
+        tbody.innerHTML = '';
+
+        categorias.forEach(c => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.categoriaId}</td>
+                    <td>${c.categoriaNombre}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('loading-categorias').style.display = 'none';
+        document.getElementById('tabla-categorias').style.display = 'table';
+    } catch (error) {
+        document.getElementById('loading-categorias').style.display = 'none';
+        mostrarAlerta('categorias-listar', error.message, 'error');
+    }
+}
+
+// ==========================================
+// CATEGORIAS - BUSCAR POR ID
+// ==========================================
+async function buscarCategoriaPorId() {
+    const id = document.getElementById('buscar-categoria-id').value;
+    if (!id) {
+        mostrarAlerta('categorias-buscar', 'Por favor ingrese un ID', 'error');
+        return;
     }
 
-    // ==========================================
-    // CATEGORIAS - BUSCAR POR ID
-    // ==========================================
-    async function buscarCategoriaPorId() {
-        const id = document.getElementById('buscar-categoria-id').value;
-        if (!id) {
-            mostrarAlerta('categorias-buscar', 'Por favor ingrese un ID', 'error');
-            return;
+    try {
+        const response = await fetch(`${API_URL}/categorias/${id}`);
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
 
-        try {
-            const response = await fetch(`${API_URL}/categorias/${id}`);
-            if (!response.ok) throw new Error('Categoría no encontrada');
+        const categoria = await response.json();
+        const resultado = document.getElementById('resultado-categoria');
 
-            const categoria = await response.json();
-            const resultado = document.getElementById('resultado-categoria');
+        resultado.innerHTML = `
+            <h4 style="margin-bottom: 15px; color: #667eea;">Categoría Encontrada</h4>
+            <div class="result-item">
+                <div class="result-label">ID:</div>
+                <div class="result-value">${categoria.categoriaId}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Nombre:</div>
+                <div class="result-value">${categoria.categoriaNombre}</div>
+            </div>
+        `;
+        resultado.style.display = 'block';
+        mostrarAlerta('categorias-buscar', 'Categoría encontrada exitosamente', 'success');
+    } catch (error) {
+        document.getElementById('resultado-categoria').style.display = 'none';
+        mostrarAlerta('categorias-buscar', error.message, 'error');
+    }
+}
 
-            resultado.innerHTML = `
-        <h4 style="margin-bottom: 15px; color: #667eea;">Categoría Encontrada</h4>
-        <div class="result-item">
-            <div class="result-label">ID:</div>
-            <div class="result-value">${categoria.categoriaId}</div>
-        </div>
-        <div class="result-item">
-            <div class="result-label">Nombre:</div>
-            <div class="result-value">${categoria.categoriaNombre}</div>
-        </div>
-    `;
-            resultado.style.display = 'block';
-            mostrarAlerta('categorias-buscar', 'Categoría encontrada exitosamente', 'success');
-        } catch (error) {
-            document.getElementById('resultado-categoria').style.display = 'none';
-            mostrarAlerta('categorias-buscar', 'Error: ' + error.message, 'error');
+// ==========================================
+// CATEGORIAS - CREAR
+// ==========================================
+document.getElementById('form-categoria-crear').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const categoria = {
+        categoriaNombre: document.getElementById('crear-categoria-nombre').value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/categorias`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(categoria)
+        });
+
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
+
+        mostrarAlerta('categorias-crear', 'Categoría creada exitosamente', 'success');
+        document.getElementById('form-categoria-crear').reset();
+    } catch (error) {
+        mostrarAlerta('categorias-crear', error.message, 'error');
+    }
+});
+
+// ==========================================
+// CATEGORIAS - ACTUALIZAR
+// ==========================================
+async function cargarCategoriaParaActualizar() {
+    const id = document.getElementById('actualizar-categoria-id').value;
+    if (!id) {
+        mostrarAlerta('categorias-actualizar', 'Por favor ingrese un ID', 'error');
+        return;
     }
 
-    // ==========================================
-    // CATEGORIAS - CREAR
-    // ==========================================
-    document.getElementById('form-categoria-crear').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/categorias/${id}`);
 
-        const categoria = {
-            categoriaNombre: document.getElementById('crear-categoria-nombre').value
-        };
-
-        try {
-            const response = await fetch(`${API_URL}/categorias`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(categoria)
-            });
-
-            if (response.ok) {
-                mostrarAlerta('categorias-crear', 'Categoría creada exitosamente', 'success');
-                document.getElementById('form-categoria-crear').reset();
-            } else {
-                mostrarAlerta('categorias-crear', 'Error al crear la categoría', 'error');
-            }
-        } catch (error) {
-            mostrarAlerta('categorias-crear', 'Error: ' + error.message, 'error');
-        }
-    });
-
-    // ==========================================
-    // CATEGORIAS - ACTUALIZAR
-    // ==========================================
-    async function cargarCategoriaParaActualizar() {
-        const id = document.getElementById('actualizar-categoria-id').value;
-        if (!id) {
-            mostrarAlerta('categorias-actualizar', 'Por favor ingrese un ID', 'error');
-            return;
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
 
-        try {
-            const response = await fetch(`${API_URL}/categorias/${id}`);
-            if (!response.ok) throw new Error('Categoría no encontrada');
+        const categoria = await response.json();
 
-            const categoria = await response.json();
-
-            document.getElementById('actualizar-categoria-nombre').value = categoria.categoriaNombre;
-            document.getElementById('form-categoria-actualizar').style.display = 'block';
-            mostrarAlerta('categorias-actualizar', 'Categoría cargada. Modifique el nombre si desea actualizarlo', 'success');
-        } catch (error) {
-            mostrarAlerta('categorias-actualizar', 'Error: ' + error.message, 'error');
-        }
+        document.getElementById('actualizar-categoria-nombre').value = categoria.categoriaNombre;
+        document.getElementById('form-categoria-actualizar').style.display = 'block';
+        mostrarAlerta('categorias-actualizar', 'Categoría cargada. Modifique el nombre si desea actualizarlo', 'success');
+    } catch (error) {
+        mostrarAlerta('categorias-actualizar', error.message, 'error');
     }
+}
 
-    document.getElementById('form-categoria-actualizar').addEventListener('submit', async (e) => {
-        e.preventDefault();
+document.getElementById('form-categoria-actualizar').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        const id = document.getElementById('actualizar-categoria-id').value;
-        const categoria = {
-            categoriaNombre: document.getElementById('actualizar-categoria-nombre').value
-        };
+    const id = document.getElementById('actualizar-categoria-id').value;
+    const categoria = {
+        categoriaNombre: document.getElementById('actualizar-categoria-nombre').value
+    };
 
-        try {
-            const response = await fetch(`${API_URL}/categorias/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(categoria)
-            });
+    try {
+        const response = await fetch(`${API_URL}/categorias/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(categoria)
+        });
 
-            if (response.ok) {
-                mostrarAlerta('categorias-actualizar', 'Categoría actualizada exitosamente', 'success');
-                cancelarActualizarCategoria();
-            } else {
-                mostrarAlerta('categorias-actualizar', 'Error al actualizar la categoría', 'error');
-            }
-        } catch (error) {
-            mostrarAlerta('categorias-actualizar', 'Error: ' + error.message, 'error');
+        if (!response.ok) {
+            const mensajeError = await obtenerMensajeError(response);
+            throw new Error(mensajeError);
         }
-    });
 
-    function cancelarActualizarCategoria() {
-        document.getElementById('form-categoria-actualizar').style.display = 'none';
-        document.getElementById('form-categoria-actualizar').reset();
-        document.getElementById('actualizar-categoria-id').value = '';
+        mostrarAlerta('categorias-actualizar', 'Categoría actualizada exitosamente', 'success');
+        cancelarActualizarCategoria();
+    } catch (error) {
+        mostrarAlerta('categorias-actualizar', error.message, 'error');
     }
+});
 
-    // ==========================================
-    // UTILIDADES
-    // ==========================================
-    function mostrarAlerta(seccion, mensaje, tipo) {
-        const alertDiv = document.getElementById(`alert-${seccion}`);
-        alertDiv.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
-        setTimeout(() => alertDiv.innerHTML = '', 5000);
-    }
+function cancelarActualizarCategoria() {
+    document.getElementById('form-categoria-actualizar').style.display = 'none';
+    document.getElementById('form-categoria-actualizar').reset();
+    document.getElementById('actualizar-categoria-id').value = '';
+}
 
-    // ==========================================
-    // CARGAR DATOS INICIALES
-    // ==========================================
-    cargarProductos();
+// ==========================================
+// CARGAR DATOS INICIALES
+// ==========================================
+cargarProductos();
 </script>
 </body>
 </html>

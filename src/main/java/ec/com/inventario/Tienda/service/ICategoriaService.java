@@ -1,5 +1,8 @@
 package ec.com.inventario.Tienda.service;
 
+import ec.com.inventario.Tienda.model.dto.CategoriaCreateDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaResponseDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaUpdateDTO;
 import ec.com.inventario.Tienda.model.entity.Categorias;
 
 import java.util.List;
@@ -7,17 +10,17 @@ import java.util.List;
 public interface ICategoriaService {
 
     // OBTENER TODAS LAS CATEGORÍAS
-    public List<Categorias> getCategoria();
+    public List<CategoriaResponseDTO> getCategoria();
 
     // OBTENER UNA CATEGORÍA POR ID
-    public Categorias findCategoria(Long id);
+    public CategoriaResponseDTO findCategoria(Long id);
 
     // CREAR UNA NUEVA CATEGORÍA
-    public void crearCategoria(Categorias categorias);
+    public CategoriaResponseDTO crearCategoria(CategoriaCreateDTO categoriaCreateDTO);
 
     // ACTUALIZAR UNA CATEGORÍA EXISTENTE
-    public Categorias actualizarCategoria(Long id, Categorias datosNuevos);
+    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaUpdateDTO categoriaUpdateDTO);
 
-    // ELIMINAR UNA CATEGORÍA POR ID
-    public void eliminarCategoria(Long id);
+    // ELIMINAR UNA CATEGORÍA POR IDY
+    // public void eliminarCategoria(Long id);
 }

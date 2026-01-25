@@ -1,5 +1,6 @@
 package ec.com.inventario.Tienda.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,18 +10,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductoDTO {
+public class CategoriaCreateDTO {
 
-    private Long productoId;
-    private String numeroSerie;
-    private String nombre;
-    private String descripcion;
-    private Double precio;
-    private Integer stock;
-
-    private Long categoriaId;
+    @NotBlank(message = "El nombre de la categoria es obligatorio")
     private String categoriaNombre;
-
-
 }
-

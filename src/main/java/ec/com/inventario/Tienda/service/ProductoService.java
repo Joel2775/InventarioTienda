@@ -1,6 +1,11 @@
 package ec.com.inventario.Tienda.service;
 
-import ec.com.inventario.Tienda.model.dto.ProductoDTO;
+import ec.com.inventario.Tienda.exception.ListaVaciaException;
+import ec.com.inventario.Tienda.exception.RecursoDuplicadoException;
+import ec.com.inventario.Tienda.exception.RecursoNoEcontradoException;
+import ec.com.inventario.Tienda.model.dto.ProductoCreateDTO;
+import ec.com.inventario.Tienda.model.dto.ProductoResponseDTO;
+import ec.com.inventario.Tienda.model.dto.ProductoUpdateDTO;
 import ec.com.inventario.Tienda.model.entity.Categorias;
 import ec.com.inventario.Tienda.model.entity.Producto;
 import ec.com.inventario.Tienda.repository.ICategoriasRepository;
@@ -23,13 +28,13 @@ public class ProductoService implements IProductoService {
     }
 
     @Override
-    public List<ProductoDTO> listarTodos() {
+    public List<ProductoResponseDTO> listarTodos() {
 
         List<Producto> productos = productoRepository.findAll();
 
-//        if (productos.isEmpty()) {
-//            throw new ListaVaciaException("No existen productos registrados");
-//        }
+        if (productos.isEmpty()) {
+            throw new ListaVaciaException("No existen productos registrados");
+        }
 
         return productos.stream()
                 .map(producto -> pasarAProductoDTO(producto))
@@ -37,30 +42,39 @@ public class ProductoService implements IProductoService {
     }
 
 
-    @Override
-    public ProductoDTO obtenerPorId(Long id) {
-        Producto producto = productoRepository.findById(id).orElse(null); // aqui deberia manejar el caso de producto no encontrado con throw o similar
+    public ProductoResponseDTO obtenerPorId(Long id) {
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEcontradoException("Producto no encontrado con id: " + id));
 
         return pasarAProductoDTO(producto);
     }
 
     @Override
-    public void crear(ProductoDTO productoDTO) {
-        Categorias categorias = categoriasRepository
-                .findById(productoDTO.getCategoriaId())
-                .orElse(null); // aqui deberia manejar el caso de categoria no encontrada con throw o similar
+    public ProductoResponseDTO crear(ProductoCreateDTO productoCreateDTO) {
 
-        Producto producto = pasarAProductoEntidad(productoDTO, categorias);
+        if (productoRepository.existsByNumeroSerie(productoCreateDTO.getNumeroSerie())) {
+            throw new RecursoDuplicadoException("Ya existe un producto con el número de serie: " + productoCreateDTO.getNumeroSerie());
+        }
 
-        productoRepository.save(producto);
+        Categorias categorias = categoriasRepository.findById(productoCreateDTO.getCategoriaId())
+                .orElseThrow(() -> new RecursoNoEcontradoException( "Categoria no encontrada con id: " + productoCreateDTO.getCategoriaId()));
+
+        Producto producto = pasarAProductoEntidad(productoCreateDTO, categorias);
+        Producto guardado = productoRepository.save(producto);
+
+        return pasarAProductoDTO(guardado);
     }
 
-    @Override
-    public ProductoDTO actualizar(Long id, ProductoDTO nuevoProducto) {
-        Producto productoExistente = productoRepository.findById(id).orElse(null); // aqui deberia manejar el caso de producto no encontrado con throw o similar
 
-        if(productoExistente == null){
-            return null;
+    @Override
+    public ProductoResponseDTO actualizar(Long id, ProductoUpdateDTO nuevoProducto) {
+
+        Producto productoExistente = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEcontradoException("Producto no encontrado con id: " + id));
+
+        if (productoRepository.existsByNumeroSerie(nuevoProducto.getNumeroSerie())) {
+            throw new RecursoDuplicadoException("Ya existe un producto con el número de serie: " + nuevoProducto.getNumeroSerie());
         }
 
         // 2. Actualizar los campos que vienen con valor
@@ -86,7 +100,7 @@ public class ProductoService implements IProductoService {
 
         if (nuevoProducto.getCategoriaId() != null) {
             Categorias categoria = categoriasRepository.findById(nuevoProducto.getCategoriaId())
-                .orElse(null); // aqui deberia manejar el caso de categoria no encontrada con throw o similar
+                    .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + nuevoProducto.getCategoriaId()));
             productoExistente.setCategoria(categoria);
         }
 
@@ -98,16 +112,20 @@ public class ProductoService implements IProductoService {
 
     @Override
     public void eliminar(Long id) {
-        productoRepository.deleteById(id);
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEcontradoException("Producto no encontrado con id: " + id));
+
+        productoRepository.delete(producto);
     }
 
 
-    public ProductoDTO pasarAProductoDTO(Producto producto) {
+
+    public ProductoResponseDTO pasarAProductoDTO(Producto producto) {
         if (producto == null) {
             return null;
         }
 
-        ProductoDTO dto = new ProductoDTO();
+        ProductoResponseDTO dto = new ProductoResponseDTO();
         dto.setProductoId(producto.getProductoId());
         dto.setNumeroSerie(producto.getNumeroSerie());
         dto.setNombre(producto.getNombre());
@@ -123,7 +141,7 @@ public class ProductoService implements IProductoService {
         return dto;
     }
 
-    public Producto pasarAProductoEntidad(ProductoDTO dto, Categorias categoria) {
+    public Producto pasarAProductoEntidad(ProductoCreateDTO dto, Categorias categoria) {
         if (dto == null) {
             return null;
         }

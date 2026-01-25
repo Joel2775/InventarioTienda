@@ -8,5 +8,9 @@ import org.springframework.stereotype.Repository;
 
 //se le pone el extendes JpaRepository<Entidad, Tipo de dato del ID> para poder automatixar las operaciones basicas de CRUD
 public interface IProductoRepository extends JpaRepository<Producto, Long> {
+
+    boolean existsByNumeroSerie(String numeroSerie);
+
+
 }
 

@@ -1,10 +1,17 @@
 package ec.com.inventario.Tienda.service;
 
+import ec.com.inventario.Tienda.exception.ListaVaciaException;
+import ec.com.inventario.Tienda.exception.RecursoDuplicadoException;
+import ec.com.inventario.Tienda.exception.RecursoNoEcontradoException;
+import ec.com.inventario.Tienda.model.dto.CategoriaCreateDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaResponseDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaUpdateDTO;
 import ec.com.inventario.Tienda.model.entity.Categorias;
 import ec.com.inventario.Tienda.repository.ICategoriasRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoriaService implements ICategoriaService {
@@ -16,44 +23,81 @@ public class CategoriaService implements ICategoriaService {
     }
 
     @Override
-    public List<Categorias> getCategoria(){
+    public List<CategoriaResponseDTO> getCategoria(){
         List<Categorias>listarCategorias =categoriasRepository.findAll();
-        return listarCategorias;
-    }
 
-    @Override
-    public Categorias findCategoria(Long id){
-        return categoriasRepository.findById(id).orElse(null);
-    }
-
-    @Override
-    public void crearCategoria(Categorias categorias){
-        categoriasRepository.save(categorias);
-    }
-
-
-    @Override
-    public Categorias actualizarCategoria(Long id, Categorias datosNuevos){
-        Categorias categoriaExistente = categoriasRepository.findById(id).orElse(null);
-
-        if(categoriaExistente == null){
-            return null;
+        if (listarCategorias.isEmpty()) {
+            throw new ListaVaciaException("No existen categorias registradas");
         }
 
-        if(datosNuevos.getCategoriaId() != null){
-            categoriaExistente.setCategoriaId((datosNuevos.getCategoriaId()));
+        return listarCategorias.stream()
+                .map(categoria  -> pasarACategoriaDTO(categoria ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CategoriaResponseDTO findCategoria(Long id) {
+        Categorias categoria = categoriasRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + id));
+        return pasarACategoriaDTO(categoria);
+    }
+
+    @Override
+    public CategoriaResponseDTO crearCategoria(CategoriaCreateDTO categoriaCreateDTO){
+        if (categoriasRepository.existsByCategoriaNombre(categoriaCreateDTO.getCategoriaNombre())) {
+            throw new RecursoDuplicadoException("La categoria con nombre " + categoriaCreateDTO.getCategoriaNombre() + " ya existe.");
+        }
+
+        Categorias categoriaExistente = pasarACategoriaEntidad(categoriaCreateDTO);
+        Categorias guardado = categoriasRepository.save(categoriaExistente);
+
+        return pasarACategoriaDTO(guardado);
+    }
+
+
+    @Override
+    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaUpdateDTO datosNuevos){
+        Categorias categoriaExistente = categoriasRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + id));
+
+        if (categoriasRepository.existsByCategoriaNombre(datosNuevos.getCategoriaNombre())) {
+            throw new IllegalArgumentException("La categoria con nombre " + datosNuevos.getCategoriaNombre() + " ya existe.");
         }
 
         if(datosNuevos.getCategoriaNombre() != null){
             categoriaExistente.setCategoriaNombre(datosNuevos.getCategoriaNombre());
         }
 
-        return categoriasRepository.save(categoriaExistente);
+        Categorias actualizado = categoriasRepository.save(categoriaExistente);
+        return pasarACategoriaDTO(actualizado);
+
     }
 
-    @Override
-    public void eliminarCategoria(Long id){
-        categoriasRepository.deleteById(id);
+//    @Override
+//    public void eliminarCategoria(Long id){
+//        Categorias categoria = categoriasRepository.findById(id)
+//                .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + id));
+//
+//        categoriasRepository.delete(categoria);
+//    }
+
+    public CategoriaResponseDTO pasarACategoriaDTO (Categorias categoria){
+        if(categoria == null){
+            return null;
+        }
+        CategoriaResponseDTO categoriaDTO = new CategoriaResponseDTO();
+        categoriaDTO.setCategoriaId(categoria.getCategoriaId());
+        categoriaDTO.setCategoriaNombre(categoria.getCategoriaNombre());
+        return categoriaDTO;
+    }
+
+    public Categorias pasarACategoriaEntidad (CategoriaCreateDTO categoriaDTO){
+        if(categoriaDTO == null){
+            return null;
+        }
+        Categorias categoria = new Categorias();
+        categoria.setCategoriaNombre(categoriaDTO.getCategoriaNombre());
+        return categoria;
     }
 }
 

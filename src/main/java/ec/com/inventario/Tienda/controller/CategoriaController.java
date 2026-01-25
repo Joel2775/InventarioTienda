@@ -1,7 +1,12 @@
 package ec.com.inventario.Tienda.controller;
 
+import ec.com.inventario.Tienda.model.dto.CategoriaCreateDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaResponseDTO;
+import ec.com.inventario.Tienda.model.dto.CategoriaUpdateDTO;
 import ec.com.inventario.Tienda.model.entity.Categorias;
 import ec.com.inventario.Tienda.service.ICategoriaService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,29 +21,28 @@ public class CategoriaController {
     }
 
     @GetMapping("/categorias")
-    public List<Categorias> getAll(){
-        return categoriaService.getCategoria();
+    public ResponseEntity<List<CategoriaResponseDTO>> getAll(){
+        return ResponseEntity.ok(categoriaService.getCategoria());
     }
 
     @GetMapping("/categorias/{id}")
-    public Categorias getById(@PathVariable Long id){
-        return categoriaService.findCategoria(id);
+    public ResponseEntity<CategoriaResponseDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(categoriaService.findCategoria(id));
     }
 
     @PostMapping("/categorias")
-    public String save(@RequestBody Categorias categorias){
-        categoriaService.crearCategoria(categorias);
-        return"La categoria fue creada correctamente";
+    public ResponseEntity<CategoriaResponseDTO> save(@Valid @RequestBody CategoriaCreateDTO categorias){
+        return ResponseEntity.ok(categoriaService.crearCategoria(categorias));
     }
 
-    @PatchMapping("/{id}")
-    public Categorias update(@PathVariable Long id, @RequestBody Categorias categorias){
-        return categoriaService.actualizarCategoria(id, categorias);
+    @PatchMapping("/categorias/{id}")
+    public ResponseEntity<CategoriaResponseDTO> update(@PathVariable Long id, @Valid @RequestBody CategoriaUpdateDTO categorias){
+        return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categorias));
     }
 
-    @DeleteMapping("/categorias/{id}")
-    public String eliminarCategoria(@PathVariable Long id){
-        categoriaService.eliminarCategoria(id);
-        return "Categoria Eliminada correctamente";
-    }
+//    @DeleteMapping("/categorias/{id}")
+//    public String eliminarCategoria(@PathVariable Long id){
+//        categoriaService.eliminarCategoria(id);
+//        return "Categoria Eliminada correctamente";
+//    }
 }

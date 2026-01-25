@@ -60,8 +60,12 @@ public class CategoriaService implements ICategoriaService {
         Categorias categoriaExistente = categoriasRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + id));
 
-        if (categoriasRepository.existsByCategoriaNombre(datosNuevos.getCategoriaNombre())) {
-            throw new IllegalArgumentException("La categoria con nombre " + datosNuevos.getCategoriaNombre() + " ya existe.");
+        if (!datosNuevos.getCategoriaNombre().equalsIgnoreCase(categoriaExistente.getCategoriaNombre()) &&
+                categoriasRepository.existsByCategoriaNombre(datosNuevos.getCategoriaNombre())) {
+
+            throw new RecursoDuplicadoException(
+                    "La categoria con nombre " + datosNuevos.getCategoriaNombre() + " ya existe."
+            );
         }
 
         if(datosNuevos.getCategoriaNombre() != null){
@@ -70,7 +74,6 @@ public class CategoriaService implements ICategoriaService {
 
         Categorias actualizado = categoriasRepository.save(categoriaExistente);
         return pasarACategoriaDTO(actualizado);
-
     }
 
 //    @Override

@@ -21,6 +21,6 @@ public class Categorias {
 
     @NotBlank
     @Size(min = 2, max = 50)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true)
     private String categoriaNombre;
 }

@@ -73,8 +73,11 @@ public class ProductoService implements IProductoService {
         Producto productoExistente = productoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEcontradoException("Producto no encontrado con id: " + id));
 
-        if (productoRepository.existsByNumeroSerie(nuevoProducto.getNumeroSerie())) {
-            throw new RecursoDuplicadoException("Ya existe un producto con el número de serie: " + nuevoProducto.getNumeroSerie());
+        if (!nuevoProducto.getNumeroSerie().equals(productoExistente.getNumeroSerie()) &&
+                productoRepository.existsByNumeroSerie(nuevoProducto.getNumeroSerie())) {
+
+            throw new RecursoDuplicadoException(
+                    "Ya existe un producto con el número de serie: " + nuevoProducto.getNumeroSerie());
         }
 
         // 2. Actualizar los campos que vienen con valor

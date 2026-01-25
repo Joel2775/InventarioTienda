@@ -76,14 +76,6 @@ public class CategoriaService implements ICategoriaService {
         return pasarACategoriaDTO(actualizado);
     }
 
-//    @Override
-//    public void eliminarCategoria(Long id){
-//        Categorias categoria = categoriasRepository.findById(id)
-//                .orElseThrow(() -> new RecursoNoEcontradoException("Categoria no encontrada con id: " + id));
-//
-//        categoriasRepository.delete(categoria);
-//    }
-
     public CategoriaResponseDTO pasarACategoriaDTO (Categorias categoria){
         if(categoria == null){
             return null;
@@ -103,5 +95,3 @@ public class CategoriaService implements ICategoriaService {
         return categoria;
     }
 }
-
-

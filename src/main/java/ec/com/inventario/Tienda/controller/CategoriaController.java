@@ -3,7 +3,6 @@ package ec.com.inventario.Tienda.controller;
 import ec.com.inventario.Tienda.model.dto.CategoriaCreateDTO;
 import ec.com.inventario.Tienda.model.dto.CategoriaResponseDTO;
 import ec.com.inventario.Tienda.model.dto.CategoriaUpdateDTO;
-import ec.com.inventario.Tienda.model.entity.Categorias;
 import ec.com.inventario.Tienda.service.ICategoriaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -39,10 +38,4 @@ public class CategoriaController {
     public ResponseEntity<CategoriaResponseDTO> update(@PathVariable Long id, @Valid @RequestBody CategoriaUpdateDTO categorias){
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, categorias));
     }
-
-//    @DeleteMapping("/categorias/{id}")
-//    public String eliminarCategoria(@PathVariable Long id){
-//        categoriaService.eliminarCategoria(id);
-//        return "Categoria Eliminada correctamente";
-//    }
 }

@@ -1161,8 +1161,9 @@ document.getElementById('form-categoria-actualizar').addEventListener('submit', 
     };
 
     try {
+        // CORRECCIÓN: Usar PUT en lugar de PATCH para categorías
         const response = await fetch(`${API_URL}/categorias/${id}`, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(categoria)
         });

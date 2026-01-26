@@ -1,7 +1,7 @@
 # Proyecto - Desarrollo de API REST con Spring Boot
 
 ## Sistema de Gestión de Inventario para Tienda de Alimentos
-## 🛠 Tecnlogias Utilizadas 
+## 🛠 Tecnologías Utilizadas 
 `Lenguaje:` Java 21.
 
 `Framework para desarrollo de API RESTs:` Spring Boot 4.0.2
@@ -33,9 +33,9 @@ use inventario_db;
 
 ### 2) Preparar el proyecto en Intellij Idea.
 - Abrir IntelliJ IDEA Community Edition
-- Dirigete a la clase `TiendaApplication` para ejecutar el proyecto.
+- Dirígete a la clase `TiendaApplication` para ejecutar el proyecto.
 
-### 3) Verificar que la aplicación esté corriendo correstamente
+### 3) Verificar que la aplicación esté corriendo correctamente
 Se debe de mostrar el siguiente mensaje en la terminal:
 ```text
   .   ____          _            __ _ _
@@ -51,9 +51,9 @@ Tomcat started on port 8080
 ```
 
 ### 4) Ejecutar el Frontend
-- Dirigete al nevegador de tu preferencia
-- En la barra de direcciones coloca el siguiente enlace: `http://localhost:8080/`
+- Dirígete al navegador de tu preferencia
+- En la barra de direcciones coloca el siguiente enlace: `http://localhost:8080/` o `http://localhost:8080/index.html` 
 - Ya estas listo para el uso del sistema.
 
-## Colección de ApiDog:
+## Colección de endpoints en ApiDog:
 1lpfn40261.apidog.io
